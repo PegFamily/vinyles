@@ -409,6 +409,59 @@
 
   input[type=file] { display: none; }
 
+  /* JUKEBOX */
+  .jukebox-btn {
+    background: linear-gradient(135deg, #a85e07, #e8830a) !important;
+    color: var(--ink) !important;
+    border-color: var(--amber) !important;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+  .jukebox-btn:hover { filter: brightness(1.1); }
+
+  .jukebox-modal {
+    text-align: center;
+    background: var(--wax);
+    border: 0.5px solid rgba(232,131,10,0.3);
+  }
+  .jukebox-header { margin-bottom: 1.5rem; }
+  .jukebox-eyebrow { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px; }
+  .jukebox-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: var(--cream); font-style: italic; }
+
+  .jukebox-cover-wrap {
+    width: 180px; height: 180px; margin: 0 auto 1.5rem;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .jukebox-disc {
+    width: 180px; height: 180px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%,
+      #e8c87a 0%, #e8c87a 12%,
+      #1a1208 12.5%, #1a1208 100%);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.05),
+      0 0 0 30px rgba(255,255,255,0.01) inset,
+      0 0 0 55px rgba(255,255,255,0.02) inset,
+      inset 0 2px 8px rgba(0,0,0,0.8),
+      0 8px 40px rgba(0,0,0,0.8);
+    animation: spin 4s linear infinite;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .jukebox-disc img {
+    width: 72px; height: 72px; border-radius: 50%;
+    object-fit: cover; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    border: 3px solid var(--wax);
+  }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .jukebox-info { margin-bottom: 1.5rem; }
+  .jukebox-artist { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); margin-bottom: 4px; }
+  .jukebox-album { font-family: 'Libre Baskerville', serif; font-size: 14px; font-style: italic; color: rgba(240,228,204,0.6); margin-bottom: 8px; }
+  .jukebox-meta { font-size: 11px; letter-spacing: 0.1em; color: var(--amber); }
+  .jukebox-actions { display: flex; justify-content: center; }
+
   @media (max-width: 600px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
     .form-row { grid-template-columns: 1fr; }
@@ -471,6 +524,7 @@
       <option value="rating">Mieux notés</option>
     </select>
     <button class="tb-btn" onclick="loadRecords()" title="Rafraîchir">↺</button>
+    <button class="tb-btn jukebox-btn" onclick="openJukebox()">🎰 Jukebox</button>
   </div>
 
   <!-- GRID -->
@@ -527,6 +581,28 @@
     </div>
   </div>
 
+</div>
+
+<!-- JUKEBOX MODAL -->
+<div class="modal-bg" id="jukebox-bg" onclick="closeJukebox(event)">
+  <div class="modal jukebox-modal">
+    <button class="modal-close" onclick="closeJukeboxDirect()">✕</button>
+    <div class="jukebox-header">
+      <div class="jukebox-eyebrow">🎰 Jukebox</div>
+      <div class="jukebox-title">Ce soir on écoute…</div>
+    </div>
+    <div class="jukebox-cover-wrap" id="jk-cover-wrap">
+      <div class="jukebox-disc" id="jk-disc"></div>
+    </div>
+    <div class="jukebox-info">
+      <div class="jukebox-artist" id="jk-artist"></div>
+      <div class="jukebox-album" id="jk-album"></div>
+      <div class="jukebox-meta" id="jk-meta"></div>
+    </div>
+    <div class="jukebox-actions">
+      <button class="btn-primary" onclick="openJukebox()">↺ Autre disque</button>
+    </div>
+  </div>
 </div>
 
 <!-- EDIT MODAL -->
@@ -793,6 +869,22 @@ async function addRecord() {
   } catch(e) { toast('Erreur lors de l\'ajout'); }
   btn.disabled=false; btn.textContent='Enregistrer le vinyle';
 }
+
+
+function openJukebox() {
+  if (!records.length) { toast('Aucun vinyle dans la collection !'); return; }
+  const r = records[Math.floor(Math.random() * records.length)];
+  document.getElementById('jk-artist').textContent = r.artist;
+  document.getElementById('jk-album').textContent  = r.title;
+  const gl = {rap:'Rap',newwave:'New wave',pop:'Pop',variete:'Variété',rock:'Rock',jazz:'Jazz',soul:'Soul'};
+  const meta = [r.year, r.genre ? gl[r.genre]||r.genre : null].filter(Boolean).join(' · ');
+  document.getElementById('jk-meta').textContent = meta;
+  const disc = document.getElementById('jk-disc');
+  disc.innerHTML = r.cover ? '<img src="' + r.cover + '" alt="' + r.artist.replace(/"/g,"&quot;") + '">' : '';
+  document.getElementById('jukebox-bg').classList.add('open');
+}
+function closeJukebox(e) { if (e.target === document.getElementById('jukebox-bg')) closeJukeboxDirect(); }
+function closeJukeboxDirect() { document.getElementById('jukebox-bg').classList.remove('open'); }
 
 function toggleAdd() {
   const body = document.getElementById('add-body');
